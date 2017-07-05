@@ -6,6 +6,11 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.HmacUtils;
 
+/**
+ * Class for parsing encoded cookie values.
+ * 
+ * @author William Tucker
+ */
 public class EncodingHandler
 {
     public static String DEFAULT_DELIMITER = "-";
@@ -13,12 +18,23 @@ public class EncodingHandler
     private String key;
     private String delimiter;
     
+    /**
+     * Constructor specifying the secret key used for encryption.
+     * 
+     * @param   key   secure secret key
+     */
     public EncodingHandler(String key)
     {
         this.key = key;
         this.delimiter = DEFAULT_DELIMITER;
     }
     
+    /**
+     * Decodes an encoded cookie value.
+     * 
+     * @param   message   the text to decode
+     * @return  the decoded message
+     */
     public String decode(String message)
     {
         String[] content = message.split(this.delimiter);
@@ -32,7 +48,7 @@ public class EncodingHandler
         try
         {
             keyBytes = Base64.decode(this.key);
-        
+            
             cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
             ivBytes = Hex.decodeHex(encodedIV.toCharArray());
             digestBytes = Hex.decodeHex(encodedDigest.toCharArray());
@@ -68,6 +84,14 @@ public class EncodingHandler
         return cookieContent;
     }
     
+    /**
+     * Verifies the signature of encrypted text with a digest.
+     * 
+     * @param   cipherText  text to verify as a byte array
+     * @param   digest      digest to compare as a byte array
+     * @param   key         secret key as a byte array
+     * @return  whether the signature matched or not
+     */
     public static boolean VerifySignature(byte[] cipherText, byte[] digest, byte[] key)
     {
         String originalDigest = new String(digest);
@@ -78,6 +102,13 @@ public class EncodingHandler
         return calculatedDigest.equals(originalDigest);
     }
     
+    /**
+     * Calculate a digest for a message from a key.
+     * 
+     * @param   key     the secret key
+     * @param   message text to sign
+     * @return  the resulting digest
+     */
     public static String Sign(byte[] key, byte[] message)
     {
         byte[] digestBytes = HmacUtils.hmacSha256(key, message);
