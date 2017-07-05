@@ -7,6 +7,7 @@ Created on 3 Jul 2017
 from __future__ import print_function
 
 import os
+import base64
 import getopt
 import logging
 import sys
@@ -49,21 +50,24 @@ def main(argv):
         if not os.path.exists(output_directory):
             os.mkdir(output_directory)
         
+        if not output_directory.endswith(os.path.sep):
+            output_directory += os.path.sep
+        
         secure_cookie_file = open(
-                output_directory + SECURE_COOKIE_FILE, 'w')
+                os.path.join(output_directory + SECURE_COOKIE_FILE), 'w')
         user_details_cookie_file = open(
-                output_directory + USER_DETAILS_COOKIE_FILE, 'w')
+                os.path.join(output_directory + USER_DETAILS_COOKIE_FILE), 'w')
         
     except getopt.GetoptError:
         print('-o <outputfile>')
         sys.exit(2)
     
     ip = '127.0.0.1'
-    
     key = generate_secret_key()
-    print('secret_key: {}'.format(key), file = secure_cookie_file)
-    print('secret_key: {}'.format(key), file = user_details_cookie_file)
-    log.info('secret key: {}'.format(key))
+    encoded_key = base64.b64encode(bytes(key), 'utf-8')
+    print('encoded_secret_key: {}'.format(encoded_key), file = secure_cookie_file)
+    print('encoded_secret_key: {}'.format(encoded_key), file = user_details_cookie_file)
+    log.info('encoded secret key: {}'.format(encoded_key))
     
     message = b'a secret message'
     print('message: {}'.format(message), file = secure_cookie_file)
