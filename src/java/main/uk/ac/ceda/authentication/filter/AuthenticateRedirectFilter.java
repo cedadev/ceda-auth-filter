@@ -13,9 +13,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.annotation.WebFilter;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import uk.ac.ceda.authentication.cookie.UserDetailsCookie;
 import uk.ac.ceda.authentication.filter.AuthenticateRedirectFilter;
 
 /**
@@ -28,6 +30,9 @@ public class AuthenticateRedirectFilter implements Filter
 
     private URL authenticateUrl;
     private String redirectQuery;
+    
+    private String sessionCookieName;
+    private String secretKey;
     
     /**
      * Default constructor.
@@ -51,23 +56,51 @@ public class AuthenticateRedirectFilter implements Filter
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException
     {
-        if (authenticateUrl != null)
+        if (this.authenticateUrl != null)
         {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             
-            StringBuffer requestUrl = httpRequest.getRequestURL();
-            
-            String query = httpRequest.getQueryString();
-            if (query != null)
+            // retrieve session cookie
+            String cookieValue = null;
+            Cookie[] cookies = httpRequest.getCookies();
+            for (Cookie cookie: cookies)
             {
-                requestUrl.append('?').append(query);
+                if (cookie.getName().equals(this.sessionCookieName))
+                {
+                    cookieValue = cookie.getValue();
+                }
             }
             
-            String redirectUrl = getRedirectUrl(requestUrl.toString());
-            if (redirectUrl != null)
+            // determine userID from session cookie
+            String userID = null;
+            if (cookieValue != null)
             {
-                HttpServletResponse httpResponse = (HttpServletResponse) response;
-                httpResponse.sendRedirect(redirectUrl);
+                UserDetailsCookie sessionCookie = UserDetailsCookie.parseCookie(
+                        this.sessionCookieName, 
+                        cookieValue,
+                        this.secretKey);
+                
+                userID = sessionCookie.getUserID();
+            }
+            
+            if (userID == null)
+            {
+                // userID not found
+                // redirect request to authentication service
+                StringBuffer requestUrl = httpRequest.getRequestURL();
+                
+                String query = httpRequest.getQueryString();
+                if (query != null)
+                {
+                    requestUrl.append('?').append(query);
+                }
+                
+                String redirectUrl = getRedirectUrl(requestUrl.toString());
+                if (redirectUrl != null)
+                {
+                    HttpServletResponse httpResponse = (HttpServletResponse) response;
+                    httpResponse.sendRedirect(redirectUrl);
+                }
             }
         }
         
@@ -82,24 +115,27 @@ public class AuthenticateRedirectFilter implements Filter
     {
         try
         {
-            authenticateUrl = new URL(fConfig.getInitParameter("authenticateUrl"));
+            this.authenticateUrl = new URL(fConfig.getInitParameter("authenticateUrl"));
         }
         catch (MalformedURLException e)
         {
-            authenticateUrl = null;
+            this.authenticateUrl = null;
         }
         
-        redirectQuery = fConfig.getInitParameter("redirectQuery");
+        this.redirectQuery = fConfig.getInitParameter("redirectQuery");
+        
+        this.sessionCookieName = fConfig.getInitParameter("sessionCookieName");
+        this.secretKey = fConfig.getInitParameter("secretKey");
     }
 
     public String getRedirectUrl(String returnUrl) throws MalformedURLException, UnsupportedEncodingException
     {
-        if (authenticateUrl == null)
+        if (this.authenticateUrl == null)
         {
             return null;
         }
         
-        String query = authenticateUrl.getQuery();
+        String query = this.authenticateUrl.getQuery();
         
         String queryPrefix = "";
         if (query != null)
@@ -117,9 +153,9 @@ public class AuthenticateRedirectFilter implements Filter
         returnUrl = URLEncoder.encode(returnUrl, "UTF-8");
         
         String redirectUrl = String.format("%s%s%s=%s",
-                authenticateUrl,
+                this.authenticateUrl,
                 queryPrefix,
-                redirectQuery,
+                this.redirectQuery,
                 returnUrl
             );
         

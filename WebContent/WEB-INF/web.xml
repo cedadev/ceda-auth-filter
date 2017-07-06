@@ -20,6 +20,14 @@
   		<param-name>redirectQuery</param-name>
   		<param-value>r</param-value>
   	</init-param>
+  	<init-param>
+  		<param-name>sessionCookieName</param-name>
+  		<param-value>ceda.session.1</param-value>
+  	</init-param>
+  	<init-param>
+  		<param-name>secretKey</param-name>
+  		<param-value>gGMQNk63cKuN0YutTmoLDeEXLJENCrFCOXYq38h8lj0=</param-value>
+  	</init-param>
   </filter>
   <filter-mapping>
   	<filter-name>AuthenticateRedirectFilter</filter-name>
