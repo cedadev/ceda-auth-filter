@@ -34,7 +34,7 @@ public class AuthenticateRedirectFilter implements Filter
      */
     public AuthenticateRedirectFilter()
     {
-        // TODO Auto-generated constructor stub
+        
     }
 
     /**
@@ -42,7 +42,7 @@ public class AuthenticateRedirectFilter implements Filter
      */
     public void destroy()
     {
-        // TODO Auto-generated method stub
+        
     }
 
     /**
