@@ -1,5 +1,13 @@
 package uk.ac.ceda.authentication.cookie;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.NoSuchPaddingException;
+
+import org.apache.commons.codec.DecoderException;
+
 public class SecureCookie
 {
     private String name;
@@ -17,6 +25,8 @@ public class SecureCookie
     }
     
     public static SecureCookie parseCookie(String name, String encodedValue, String key)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
+                InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
         EncodingHandler encodingHandler = new EncodingHandler(key);
         String decodedValue = encodingHandler.decode(encodedValue);

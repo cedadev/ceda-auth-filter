@@ -5,7 +5,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -17,6 +21,11 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import uk.ac.ceda.authentication.cookie.DecryptionException;
 import uk.ac.ceda.authentication.cookie.UserDetailsCookie;
 import uk.ac.ceda.authentication.filter.AuthenticateRedirectFilter;
 
@@ -33,6 +42,8 @@ public class AuthenticateRedirectFilter implements Filter
     
     private String sessionCookieName;
     private String secretKey;
+    
+    private static final Log LOG = LogFactory.getLog(AuthenticateRedirectFilter.class);
     
     /**
      * Default constructor.
@@ -63,11 +74,14 @@ public class AuthenticateRedirectFilter implements Filter
             // retrieve session cookie
             String cookieValue = null;
             Cookie[] cookies = httpRequest.getCookies();
-            for (Cookie cookie: cookies)
+            if (cookies != null)
             {
-                if (cookie.getName().equals(this.sessionCookieName))
+                for (Cookie cookie: cookies)
                 {
-                    cookieValue = cookie.getValue();
+                    if (cookie.getName().equals(this.sessionCookieName))
+                    {
+                        cookieValue = cookie.getValue();
+                    }
                 }
             }
             
@@ -75,12 +89,19 @@ public class AuthenticateRedirectFilter implements Filter
             String userID = null;
             if (cookieValue != null)
             {
-                UserDetailsCookie sessionCookie = UserDetailsCookie.parseCookie(
-                        this.sessionCookieName, 
-                        cookieValue,
-                        this.secretKey);
-                
-                userID = sessionCookie.getUserID();
+                try
+                {
+                    UserDetailsCookie sessionCookie = UserDetailsCookie.parseCookie(
+                            this.sessionCookieName, 
+                            cookieValue,
+                            this.secretKey);
+                    userID = sessionCookie.getUserID();
+                }
+                catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException |
+                        InvalidAlgorithmParameterException | DecoderException | DecryptionException e)
+                {
+                    LOG.error(String.format("Problem parsing cookie value: %s", cookieValue), e);
+                }
             }
             
             if (userID == null)
@@ -119,6 +140,7 @@ public class AuthenticateRedirectFilter implements Filter
         }
         catch (MalformedURLException e)
         {
+            LOG.error(String.format("URL, %s, was not a valid format.", this.authenticateUrl), e);
             this.authenticateUrl = null;
         }
         

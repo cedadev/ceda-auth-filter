@@ -6,13 +6,18 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.stream.Stream;
 
+import javax.crypto.NoSuchPaddingException;
+
 import org.junit.Before;
 import org.junit.Test;
-
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Base64;
 
 public class UserDetailsCookieTests
 {
@@ -49,7 +54,7 @@ public class UserDetailsCookieTests
             
             secretKey = valueMap.get("secret_key");
             if (secretKey != null)
-                secretKey = Base64.encode(secretKey.getBytes());
+                secretKey = Base64.encodeBase64String(secretKey.getBytes());
             cookieValue = valueMap.get("cookie_value");
             
             userID = valueMap.get("userid");
@@ -64,6 +69,8 @@ public class UserDetailsCookieTests
 
     @Test
     public void testParseCookie()
+            throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
+                InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
         UserDetailsCookie cookie = UserDetailsCookie.parseCookie("", this.cookieValue, this.secretKey);
         
