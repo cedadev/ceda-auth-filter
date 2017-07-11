@@ -1,8 +1,17 @@
 package uk.ac.ceda.authentication.cookie;
 
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.regex.Pattern;
+
+import javax.crypto.NoSuchPaddingException;
+
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 public class UserDetailsCookie extends SecureCookie
 {
@@ -13,6 +22,8 @@ public class UserDetailsCookie extends SecureCookie
     private String userID;
     private String tokens;
     private String[] userData;
+
+    private static final Log LOG = LogFactory.getLog(UserDetailsCookie.class);
     
     public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String tokens, String[] userData)
     {
@@ -25,6 +36,8 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     public static UserDetailsCookie parseCookie(String name, String encodedValue, String key)
+            throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
+                InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
         SecureCookie cookie = SecureCookie.parseCookie(name, encodedValue, key);
         String cookieContent = cookie.getValue();
@@ -38,7 +51,8 @@ public class UserDetailsCookie extends SecureCookie
             try
             {
                 timestamp = new Timestamp(Long.parseLong(cookieContent.substring(0, 8), 16));
-                System.out.println(String.format("timestamp: %s", timestamp.toString()));
+                if (LOG.isDebugEnabled())
+                    LOG.debug(String.format("timestamp: %s", timestamp.toString()));
             }
             catch (NumberFormatException e)
             {
@@ -48,12 +62,14 @@ public class UserDetailsCookie extends SecureCookie
             String cookieBody = cookieContent.substring(8);
             if (!cookieBody.contains(BODY_SEPARATOR))
             {
-                System.out.println("Bad cookie format");
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Bad cookie format");
             }
         
             String[] bodyParts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
             userID = bodyParts[0];
-            System.out.println(String.format("userID: %s", userID));
+            if (LOG.isDebugEnabled())
+                LOG.debug(String.format("userID: %s", userID));
             if (bodyParts.length > 1)
             {
                 userData = bodyParts[1].split(Pattern.quote(BODY_SEPARATOR));
@@ -63,17 +79,8 @@ public class UserDetailsCookie extends SecureCookie
                     userData = Arrays.copyOfRange(userData, 1, userData.length);
                 }
             }
-            System.out.println(String.format("tokens: %s", tokens));
-            System.out.println("userData:");
-            if (userData != null)
-            {
-                for (String dataValue : userData)
-                {
-                    System.out.println(dataValue);
-                }
-            }
         }
-    
+        
         UserDetailsCookie details = new UserDetailsCookie(name, key, timestamp, userID, tokens, userData);
         
         return details;

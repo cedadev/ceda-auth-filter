@@ -3,6 +3,10 @@ package uk.ac.ceda.authentication.cookie;
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -25,31 +29,24 @@ public class EncryptionHandler
     private IvParameterSpec iv;
     private char paddingChar;
     
+    private static final Log LOG = LogFactory.getLog(EncryptionHandler.class);
+    
     /**
      * Constructor taking a secret key and an iv.
      * 
      * @param   keyBytes    secret key
      * @param   ivBytes     encryption iv
+     * @throws NoSuchPaddingException 
+     * @throws NoSuchAlgorithmException 
      */
-    public EncryptionHandler(byte[] keyBytes, byte[] ivBytes)
+    public EncryptionHandler(byte[] keyBytes, byte[] ivBytes) throws NoSuchAlgorithmException, NoSuchPaddingException
     {
         this.key = new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 DEFAULT_SECRET_KEY_SPEC);
         this.iv = new IvParameterSpec(ivBytes);
         this.paddingChar = DEFAULT_PADDING_CHAR;
         
-        try
-        {
-            this.cipher = Cipher.getInstance(DEFAULT_CIPHER);
-        }
-        catch (NoSuchAlgorithmException e)
-        {
-            e.printStackTrace();
-        }
-        catch (NoSuchPaddingException e)
-        {
-            e.printStackTrace();
-        }
+        this.cipher = Cipher.getInstance(DEFAULT_CIPHER);
     }
     
     /**
@@ -57,8 +54,13 @@ public class EncryptionHandler
      * 
      * @param   cipherTextBytes byte array of the text
      * @return  decrypted text
+     * @throws InvalidAlgorithmParameterException 
+     * @throws InvalidKeyException 
+     * @throws DecryptionException 
+     * @throws UnsupportedEncodingException 
      */
     public String decrypt(byte[] cipherTextBytes)
+            throws InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
         String textValue = null;
         try
@@ -66,30 +68,17 @@ public class EncryptionHandler
             this.cipher.init(Cipher.DECRYPT_MODE, this.key, this.iv);
             
             byte[] plainTextBytes = this.cipher.doFinal(cipherTextBytes);
-            
             textValue = new String(plainTextBytes, "UTF-8");
+            
             String regex = String.format("%s+$", Pattern.quote(String.valueOf(this.paddingChar)));
             textValue = textValue.replaceAll(regex, "");
+
+            if (LOG.isDebugEnabled())
+                LOG.debug(String.format("Decoded text: %s", plainTextBytes));
         }
-        catch (InvalidKeyException e)
+        catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e)
         {
-            e.printStackTrace();
-        }
-        catch (BadPaddingException e)
-        {
-            e.printStackTrace();
-        }
-        catch (IllegalBlockSizeException e)
-        {
-            e.printStackTrace();
-        }
-        catch (InvalidAlgorithmParameterException e)
-        {
-            e.printStackTrace();
-        }
-        catch (UnsupportedEncodingException e)
-        {
-            e.printStackTrace();
+            throw new DecryptionException("Problem decrypting bytes.", e);
         }
         
         return textValue;

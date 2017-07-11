@@ -1,10 +1,18 @@
 package uk.ac.ceda.authentication.cookie;
 
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
-import com.sun.org.apache.xml.internal.security.utils.Base64;
+import org.apache.commons.codec.binary.Base64;
+
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import javax.crypto.NoSuchPaddingException;
+
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.codec.digest.HmacUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 /**
  * Class for parsing encoded cookie values.
@@ -17,6 +25,8 @@ public class EncodingHandler
     
     private String key;
     private String delimiter;
+    
+    private static final Log LOG = LogFactory.getLog(EncodingHandler.class);
     
     /**
      * Constructor specifying the secret key used for encryption.
@@ -34,50 +44,53 @@ public class EncodingHandler
      * 
      * @param   message   the text to decode
      * @return  the decoded message
+     * @throws DecoderException 
+     * @throws NoSuchPaddingException 
+     * @throws NoSuchAlgorithmException 
+     * @throws DecryptionException 
+     * @throws InvalidAlgorithmParameterException 
+     * @throws InvalidKeyException 
      */
     public String decode(String message)
+            throws DecoderException, NoSuchAlgorithmException, NoSuchPaddingException,
+                    InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
         String[] content = message.split(this.delimiter);
         String encodedCipherText = content[0];
         String encodedIV = content[1];
         String encodedDigest = content[2];
         
-        System.out.println(String.format("Cipher text: %s\nIV: %s\nDigest: %s", encodedCipherText, encodedIV, encodedDigest));
+        if (LOG.isDebugEnabled())
+            LOG.debug(String.format("Cipher text: %s\nIV: %s\nDigest: %s",
+                    encodedCipherText, encodedIV, encodedDigest));
         
-        byte[] keyBytes = null, cipherTextBytes = null, ivBytes = null, digestBytes = null;
-        try
-        {
-            keyBytes = Base64.decode(this.key);
-            
-            cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
-            ivBytes = Hex.decodeHex(encodedIV.toCharArray());
-            digestBytes = Hex.decodeHex(encodedDigest.toCharArray());
-        }
-        catch (DecoderException e)
-        {
-            e.printStackTrace();
-        }
-        catch (Base64DecodingException e)
-        {
-            e.printStackTrace();
-        }
+        byte[] keyBytes = Base64.decodeBase64(this.key);
+        
+        byte[] cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
+        byte[] ivBytes = Hex.decodeHex(encodedIV.toCharArray());
+        byte[] digestBytes = Hex.decodeHex(encodedDigest.toCharArray());
         
         String cookieContent = null;
         if (keyBytes != null && cipherTextBytes != null && ivBytes != null && digestBytes != null)
         {
-            System.out.println("Verifying signature");
+            if (LOG.isDebugEnabled())
+                LOG.debug("Verifying signature");
             if (VerifySignature(encodedCipherText.getBytes(), digestBytes, keyBytes))
             {
-                System.out.println("Decrypting");
-            
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Decrypting");
+                
                 EncryptionHandler encryptionHandler = new EncryptionHandler(keyBytes, ivBytes);
+                
                 cookieContent = encryptionHandler.decrypt(cipherTextBytes);
             
-                System.out.println(String.format("Cookie content: %s", cookieContent));
+                if (LOG.isDebugEnabled())
+                    LOG.debug(String.format("Cookie content: %s", cookieContent));
             }
             else
             {
-                System.out.println("Digests do not match");
+                if (LOG.isDebugEnabled())
+                    LOG.debug("Digests do not match");
             }
         }
         
@@ -97,7 +110,9 @@ public class EncodingHandler
         String originalDigest = new String(digest);
         String calculatedDigest = Sign(key, cipherText);
         
-        System.out.println(String.format("Comparing original digest: %s\n   with calculated digest: %s", originalDigest, calculatedDigest));
+        if (LOG.isDebugEnabled())
+            LOG.debug(String.format("Comparing original digest: %s\n   with calculated digest: %s",
+                    originalDigest, calculatedDigest));
         
         return calculatedDigest.equals(originalDigest);
     }
