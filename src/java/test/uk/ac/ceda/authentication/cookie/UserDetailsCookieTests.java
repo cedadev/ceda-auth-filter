@@ -17,7 +17,6 @@ import javax.crypto.NoSuchPaddingException;
 import org.junit.Before;
 import org.junit.Test;
 import org.apache.commons.codec.DecoderException;
-import org.apache.commons.codec.binary.Base64;
 
 public class UserDetailsCookieTests
 {
@@ -32,7 +31,8 @@ public class UserDetailsCookieTests
     public void setUp() throws Exception
     {
         ClassLoader loader = Test.class.getClassLoader();
-        Path cookieInfoPath = Paths.get(loader.getResource("uk/ac/ceda/authentication/cookie/sample_cookies/user-details-cookie-info").toURI());
+        Path cookieInfoPath = Paths.get(loader.getResource(
+                "uk/ac/ceda/authentication/cookie/sample_cookies/user-details-cookie-info").toURI());
         
         secretKey = null;
         userID = null;
@@ -52,9 +52,7 @@ public class UserDetailsCookieTests
                 }
             });
             
-            secretKey = valueMap.get("secret_key");
-            if (secretKey != null)
-                secretKey = Base64.encodeBase64String(secretKey.getBytes());
+            secretKey = valueMap.get("encoded_secret_key");
             cookieValue = valueMap.get("cookie_value");
             
             userID = valueMap.get("userid");
@@ -74,9 +72,13 @@ public class UserDetailsCookieTests
     {
         UserDetailsCookie cookie = UserDetailsCookie.parseCookie("", this.cookieValue, this.secretKey);
         
-        assertEquals(cookie.getUserID(), this.userID);
-        assertEquals(cookie.getTokens(), this.tokens);
-        assertEquals(cookie.getUserData(), this.userData);
+        assertEquals(this.userID, cookie.getUserID());
+        String[] tokens = cookie.getTokens();
+        for (int i = 0; i > tokens.length; i++)
+        {
+            assertEquals(this.tokens[i], tokens[i]);
+        }
+        assertEquals(this.userData, cookie.getUserData());
     }
 
 }

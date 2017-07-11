@@ -20,12 +20,12 @@ public class UserDetailsCookie extends SecureCookie
     
     private Timestamp timestamp;
     private String userID;
-    private String tokens;
-    private String[] userData;
+    private String[] tokens;
+    private String userData;
 
     private static final Log LOG = LogFactory.getLog(UserDetailsCookie.class);
     
-    public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String tokens, String[] userData)
+    public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String[] tokens, String userData)
     {
         super(name, key);
         
@@ -44,8 +44,8 @@ public class UserDetailsCookie extends SecureCookie
         
         Timestamp timestamp = null;
         String userID = null;
-        String tokens = null;
-        String[] userData = null;
+        String[] tokens = null;
+        String userData = null;
         if (cookieContent != null)
         {
             try
@@ -66,17 +66,22 @@ public class UserDetailsCookie extends SecureCookie
                     LOG.debug("Bad cookie format");
             }
         
-            String[] bodyParts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
-            userID = bodyParts[0];
+            String[] parts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
+            userID = parts[0];
             if (LOG.isDebugEnabled())
                 LOG.debug(String.format("userID: %s", userID));
-            if (bodyParts.length > 1)
+            if (parts.length > 1)
             {
-                userData = bodyParts[1].split(Pattern.quote(BODY_SEPARATOR));
-                if (userData.length > 1)
+                parts = parts[1].split(Pattern.quote(BODY_SEPARATOR));
+                if (parts.length == 2)
                 {
-                    tokens = userData[0];
-                    userData = Arrays.copyOfRange(userData, 1, userData.length);
+                    // tokens are comma separated
+                    tokens = parts[0].split(Pattern.quote(","));
+                    userData = parts[1];
+                }
+                else if (parts.length == 1)
+                {
+                    userData = parts[0];
                 }
             }
         }
@@ -102,12 +107,12 @@ public class UserDetailsCookie extends SecureCookie
         return userID;
     }
     
-    public String getTokens()
+    public String[] getTokens()
     {
         return tokens;
     }
     
-    public String[] getUserData()
+    public String getUserData()
     {
         return userData;
     }

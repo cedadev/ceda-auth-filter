@@ -46,6 +46,14 @@ public class AuthenticateRedirectFilter implements Filter
     private static final Log LOG = LogFactory.getLog(AuthenticateRedirectFilter.class);
     
     /**
+     * @see Filter#destroy()
+     */
+    public void destroy()
+    {
+        
+    }
+    
+    /**
      * @see Filter#doFilter(ServletRequest, ServletResponse, FilterChain)
      */
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -71,7 +79,26 @@ public class AuthenticateRedirectFilter implements Filter
             
             // determine userID from session cookie
             String userID = null;
-            if (cookieValue != null)
+            if (cookieValue == null)
+            {
+                // session cookie not found
+                // redirect request to authentication service
+                StringBuffer requestUrl = httpRequest.getRequestURL();
+                
+                String query = httpRequest.getQueryString();
+                if (query != null)
+                {
+                    requestUrl.append('?').append(query);
+                }
+                
+                String redirectUrl = getRedirectUrl(requestUrl.toString());
+                if (redirectUrl != null)
+                {
+                    HttpServletResponse httpResponse = (HttpServletResponse) response;
+                    httpResponse.sendRedirect(redirectUrl);
+                }
+            }
+            else
             {
                 try
                 {
@@ -90,22 +117,10 @@ public class AuthenticateRedirectFilter implements Filter
             
             if (userID == null)
             {
-                // userID not found
-                // redirect request to authentication service
-                StringBuffer requestUrl = httpRequest.getRequestURL();
-                
-                String query = httpRequest.getQueryString();
-                if (query != null)
-                {
-                    requestUrl.append('?').append(query);
-                }
-                
-                String redirectUrl = getRedirectUrl(requestUrl.toString());
-                if (redirectUrl != null)
-                {
-                    HttpServletResponse httpResponse = (HttpServletResponse) response;
-                    httpResponse.sendRedirect(redirectUrl);
-                }
+                // userID not found in cookie
+                // send 401 response
+                HttpServletResponse httpResponse = (HttpServletResponse) response;
+                httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found.");
             }
         }
         
@@ -118,13 +133,14 @@ public class AuthenticateRedirectFilter implements Filter
      */
     public void init(FilterConfig fConfig) throws ServletException
     {
+        String authenticateUrl = fConfig.getInitParameter("authenticateUrl");
         try
         {
-            this.authenticateUrl = new URL(fConfig.getInitParameter("authenticateUrl"));
+            this.authenticateUrl = new URL(authenticateUrl);
         }
         catch (MalformedURLException e)
         {
-            LOG.error(String.format("URL, %s, was not a valid format.", this.authenticateUrl), e);
+            LOG.error(String.format("URL, %s, was not a valid format.", authenticateUrl), e);
             this.authenticateUrl = null;
         }
         

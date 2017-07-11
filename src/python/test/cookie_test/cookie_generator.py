@@ -31,8 +31,8 @@ def encode_message(key, message):
     
     return Encoder().encode_msg(message, key)
 
-def create_cookie(key, value, ip):
-    return SecureCookie(key, value, ip)
+def create_cookie(key, value, ip, tokens = (), user_data = ''):
+    return SecureCookie(key, value, ip, tokens, user_data)
 
 def main(argv):
     logging.basicConfig(level=logging.DEBUG)
@@ -64,11 +64,12 @@ def main(argv):
     
     ip = '127.0.0.1'
     key = generate_secret_key()
-    encoded_key = base64.b64encode(bytes(key), 'utf-8')
+    encoded_key = key.encode('base64')
     print('encoded_secret_key: {}'.format(encoded_key), file = secure_cookie_file)
     print('encoded_secret_key: {}'.format(encoded_key), file = user_details_cookie_file)
     log.info('encoded secret key: {}'.format(encoded_key))
     
+    # Secure Cookie
     message = b'a secret message'
     print('message: {}'.format(message), file = secure_cookie_file)
     
@@ -82,6 +83,7 @@ def main(argv):
     log.info('encoded secure cookie\nmessage: {}, cookie value: {}'
              .format(message, cookie_value))
     
+    # User Details Cookie
     userid = 'userid'
     print('userid: {}'.format(userid), file = user_details_cookie_file)
     tokens = ('token1', 'token2')
@@ -92,7 +94,7 @@ def main(argv):
     encoded_message = encode_message(key, message)
     print('encoded_message: {}'.format(encoded_message), file = user_details_cookie_file)
     
-    secure_cookie = create_cookie(key, message, ip)
+    secure_cookie = create_cookie(key, userid, ip, tokens, user_data)
     cookie_value = secure_cookie.cookie_value()
     print('cookie_value: {}'.format(cookie_value), file = user_details_cookie_file)
     
