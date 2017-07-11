@@ -46,22 +46,6 @@ public class AuthenticateRedirectFilter implements Filter
     private static final Log LOG = LogFactory.getLog(AuthenticateRedirectFilter.class);
     
     /**
-     * Default constructor.
-     */
-    public AuthenticateRedirectFilter()
-    {
-        
-    }
-
-    /**
-     * @see Filter#destroy()
-     */
-    public void destroy()
-    {
-        
-    }
-
-    /**
      * @see Filter#doFilter(ServletRequest, ServletResponse, FilterChain)
      */
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
