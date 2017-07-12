@@ -2,8 +2,6 @@ package uk.ac.ceda.authentication.cookie;
 
 import org.apache.commons.codec.binary.Base64;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.NoSuchPaddingException;
@@ -23,8 +21,10 @@ public class EncodingHandler
 {
     public static String DEFAULT_DELIMITER = "-";
     
-    private String key;
     private String delimiter;
+    
+    private byte[] keyBytes;
+    private EncryptionHandler encryptionHandler;
     
     private static final Log LOG = LogFactory.getLog(EncodingHandler.class);
     
@@ -32,11 +32,15 @@ public class EncodingHandler
      * Constructor specifying the secret key used for encryption.
      * 
      * @param   key   secure secret key
+     * @throws NoSuchPaddingException 
+     * @throws NoSuchAlgorithmException 
      */
-    public EncodingHandler(String key)
+    public EncodingHandler(String key) throws NoSuchAlgorithmException, NoSuchPaddingException
     {
-        this.key = key;
         this.delimiter = DEFAULT_DELIMITER;
+        
+        this.keyBytes = Base64.decodeBase64(key);
+        this.encryptionHandler = new EncryptionHandler(keyBytes);
     }
     
     /**
@@ -45,45 +49,46 @@ public class EncodingHandler
      * @param   message   the text to decode
      * @return  the decoded message
      * @throws DecoderException 
-     * @throws NoSuchPaddingException 
-     * @throws NoSuchAlgorithmException 
      * @throws DecryptionException 
-     * @throws InvalidAlgorithmParameterException 
-     * @throws InvalidKeyException 
      */
-    public String decode(String message)
-            throws DecoderException, NoSuchAlgorithmException, NoSuchPaddingException,
-                    InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
+    public String decode(String message) throws DecoderException, DecryptionException
     {
-        String[] content = message.split(this.delimiter);
-        String encodedCipherText = content[0];
-        String encodedIV = content[1];
-        String encodedDigest = content[2];
+        String encodedCipherText;
+        String encodedIV;
+        String encodedDigest;
+        try
+        {
+            String[] content = message.split(this.delimiter);
+            
+            encodedCipherText = content[0];
+            encodedIV = content[1];
+            encodedDigest = content[2];
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            throw new DecoderException("Invalid cookie format.", e);
+        }
         
         if (LOG.isDebugEnabled())
             LOG.debug(String.format("Cipher text: %s\nIV: %s\nDigest: %s",
                     encodedCipherText, encodedIV, encodedDigest));
-        
-        byte[] keyBytes = Base64.decodeBase64(this.key);
         
         byte[] cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
         byte[] ivBytes = Hex.decodeHex(encodedIV.toCharArray());
         byte[] digestBytes = Hex.decodeHex(encodedDigest.toCharArray());
         
         String cookieContent = null;
-        if (keyBytes != null && cipherTextBytes != null && ivBytes != null && digestBytes != null)
+        if (this.keyBytes != null && cipherTextBytes != null && ivBytes != null && digestBytes != null)
         {
             if (LOG.isDebugEnabled())
                 LOG.debug("Verifying signature");
-            if (VerifySignature(encodedCipherText.getBytes(), digestBytes, keyBytes))
+            if (VerifySignature(encodedCipherText.getBytes(), digestBytes, this.keyBytes))
             {
                 if (LOG.isDebugEnabled())
                     LOG.debug("Decrypting");
                 
-                EncryptionHandler encryptionHandler = new EncryptionHandler(keyBytes, ivBytes);
+                cookieContent = this.encryptionHandler.decrypt(cipherTextBytes, ivBytes);
                 
-                cookieContent = encryptionHandler.decrypt(cipherTextBytes);
-            
                 if (LOG.isDebugEnabled())
                     LOG.debug(String.format("Cookie content: %s", cookieContent));
             }

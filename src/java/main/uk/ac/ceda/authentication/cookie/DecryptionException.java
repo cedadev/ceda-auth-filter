@@ -1,11 +1,13 @@
 package uk.ac.ceda.authentication.cookie;
 
+/**
+ * Exception thrown when a problem occurs during decryption.
+ * 
+ * @author William Tucker
+ */
 public class DecryptionException extends Exception
 {
 
-    /**
-     * Exception thrown when a problem occurs during decryption.
-     */
     private static final long serialVersionUID = 1L;
 
     public DecryptionException(String message, Throwable cause)

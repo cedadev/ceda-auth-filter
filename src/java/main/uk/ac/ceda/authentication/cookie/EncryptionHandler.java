@@ -26,7 +26,6 @@ public class EncryptionHandler
     
     private SecretKey key;
     private Cipher cipher;
-    private IvParameterSpec iv;
     private char paddingChar;
     
     private static final Log LOG = LogFactory.getLog(EncryptionHandler.class);
@@ -39,11 +38,10 @@ public class EncryptionHandler
      * @throws NoSuchPaddingException 
      * @throws NoSuchAlgorithmException 
      */
-    public EncryptionHandler(byte[] keyBytes, byte[] ivBytes) throws NoSuchAlgorithmException, NoSuchPaddingException
+    public EncryptionHandler(byte[] keyBytes) throws NoSuchAlgorithmException, NoSuchPaddingException
     {
         this.key = new SecretKeySpec(keyBytes, 0, keyBytes.length,
                 DEFAULT_SECRET_KEY_SPEC);
-        this.iv = new IvParameterSpec(ivBytes);
         this.paddingChar = DEFAULT_PADDING_CHAR;
         
         this.cipher = Cipher.getInstance(DEFAULT_CIPHER);
@@ -54,29 +52,28 @@ public class EncryptionHandler
      * 
      * @param   cipherTextBytes byte array of the text
      * @return  decrypted text
-     * @throws InvalidAlgorithmParameterException 
-     * @throws InvalidKeyException 
      * @throws DecryptionException 
-     * @throws UnsupportedEncodingException 
      */
-    public String decrypt(byte[] cipherTextBytes)
-            throws InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
+    public String decrypt(byte[] cipherTextBytes, byte[] ivBytes) throws DecryptionException
     {
+        IvParameterSpec iv = new IvParameterSpec(ivBytes);
+        
         String textValue = null;
         try
         {
-            this.cipher.init(Cipher.DECRYPT_MODE, this.key, this.iv);
+            this.cipher.init(Cipher.DECRYPT_MODE, this.key, iv);
             
             byte[] plainTextBytes = this.cipher.doFinal(cipherTextBytes);
             textValue = new String(plainTextBytes, "UTF-8");
             
             String regex = String.format("%s+$", Pattern.quote(String.valueOf(this.paddingChar)));
             textValue = textValue.replaceAll(regex, "");
-
+            
             if (LOG.isDebugEnabled())
                 LOG.debug(String.format("Decoded text: %s", plainTextBytes));
         }
-        catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException e)
+        catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException |
+                InvalidKeyException | InvalidAlgorithmParameterException e)
         {
             throw new DecryptionException("Problem decrypting bytes.", e);
         }

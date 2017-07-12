@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -22,6 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -44,6 +46,9 @@ public class AuthenticateRedirectFilterTests
     private static final String COOKIE_NAME_PARAM = "sessionCookieName";
     private static final String COOKIE_NAME = "session-cookie";
     
+    private static String secretKey;
+    private static String cookieValue;
+    
     @Mock
     private HttpServletRequest mockRequest;
     
@@ -61,6 +66,40 @@ public class AuthenticateRedirectFilterTests
     
     private AuthenticateRedirectFilter filter;
     private String expectedPrefix;
+    
+    @BeforeClass
+    public static void setUpBeforeClass()
+    {
+        ClassLoader loader = Test.class.getClassLoader();
+        URL cookieInfoUrl = loader.getResource(
+                "uk/ac/ceda/authentication/cookie/sample_cookies/user-details-cookie-info");
+        
+        try
+        {
+            Path cookieInfoPath = Paths.get(cookieInfoUrl.toURI());
+            
+            Stream<String> stream = Files.lines(cookieInfoPath);
+            HashMap<String, String> valueMap = new HashMap<String, String>();
+            stream.forEach(line -> {
+                String[] parts = line.split(" ", 2);
+                if (parts.length > 1)
+                {
+                    String key = parts[0].replaceAll(":", "");
+                    String value = parts[1];
+                    
+                    valueMap.put(key, value);
+                }
+            });
+            stream.close();
+            
+            AuthenticateRedirectFilterTests.secretKey = valueMap.get("encoded_secret_key");
+            AuthenticateRedirectFilterTests.cookieValue = valueMap.get("cookie_value");
+        }
+        catch (URISyntaxException | IOException e)
+        {
+            ;
+        }
+    }
     
     @Before
     public void setUp() throws Exception
@@ -99,33 +138,14 @@ public class AuthenticateRedirectFilterTests
     }
     
     @Test
-    public void testDoFilter_authenticated() throws URISyntaxException, IOException, ServletException
+    public void testDoFilter_authenticated() throws URISyntaxException, IOException,
+            ServletException
     {
-        ClassLoader loader = Test.class.getClassLoader();
-        Path cookieInfoPath = Paths.get(loader.getResource(
-                "uk/ac/ceda/authentication/cookie/sample_cookies/user-details-cookie-info").toURI());
+        assertNotNull(secretKey);
+        assertNotNull(cookieValue);
         
-        Stream<String> stream = Files.lines(cookieInfoPath);
-        HashMap<String, String> valueMap = new HashMap<String, String>();
-        stream.forEach(line -> {
-            String[] parts = line.split(" ", 2);
-            if (parts.length > 1)
-            {
-                String key = parts[0].replaceAll(":", "");
-                String value = parts[1];
-                
-                valueMap.put(key, value);
-            }
-        });
-        stream.close();
-        
-        String secretKey = valueMap.get("encoded_secret_key");
-        String cookieValue = valueMap.get("cookie_value");
-        
-        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(
-                secretKey);
-        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(
-                COOKIE_NAME);
+        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(secretKey);
+        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(COOKIE_NAME);
         
         filter = new AuthenticateRedirectFilter();
         filter.init(mockFilterConfig);
@@ -141,18 +161,18 @@ public class AuthenticateRedirectFilterTests
         when(mockRequest.getRequestURL()).thenReturn(requestUrl);
         
         filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+        
+        verify(mockResponse, never()).sendRedirect(anyString());
     }
 
     @Test
     public void testDoFilter_badCookie() throws URISyntaxException, IOException, ServletException
     {
-        String secretKey = "";
+        assertNotNull(secretKey);
         String cookieValue = "";
         
-        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(
-                secretKey);
-        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(
-                COOKIE_NAME);
+        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(secretKey);
+        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(COOKIE_NAME);
         
         filter = new AuthenticateRedirectFilter();
         filter.init(mockFilterConfig);
@@ -168,6 +188,8 @@ public class AuthenticateRedirectFilterTests
         when(mockRequest.getRequestURL()).thenReturn(requestUrl);
         
         filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+        
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, mockResponse.getStatus());
     }
     
     @Test

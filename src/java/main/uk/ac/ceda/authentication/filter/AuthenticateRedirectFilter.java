@@ -5,8 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.NoSuchPaddingException;
@@ -31,6 +29,8 @@ import uk.ac.ceda.authentication.filter.AuthenticateRedirectFilter;
 
 /**
  * Servlet Filter implementation class AuthRedirectFilter
+ * 
+ * @author William Tucker
  */
 @WebFilter(filterName = "AuthRedirectFilter", urlPatterns = { "/*" },
            description = "Redirects unauthenticated requests to an authentication service.")
@@ -108,8 +108,8 @@ public class AuthenticateRedirectFilter implements Filter
                             this.secretKey);
                     userID = sessionCookie.getUserID();
                 }
-                catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException |
-                        InvalidAlgorithmParameterException | DecoderException | DecryptionException e)
+                catch (NoSuchAlgorithmException | NoSuchPaddingException | DecoderException |
+                        DecryptionException e)
                 {
                     LOG.error(String.format("Problem parsing cookie value: %s", cookieValue), e);
                 }
@@ -149,7 +149,15 @@ public class AuthenticateRedirectFilter implements Filter
         this.sessionCookieName = fConfig.getInitParameter("sessionCookieName");
         this.secretKey = fConfig.getInitParameter("secretKey");
     }
-
+    
+    /**
+     * Construct a redirection URL based on config settings.
+     * 
+     * @param returnUrl URL to return to after authentication
+     * @return  redirect URL
+     * @throws MalformedURLException
+     * @throws UnsupportedEncodingException
+     */
     public String getRedirectUrl(String returnUrl) throws MalformedURLException, UnsupportedEncodingException
     {
         if (this.authenticateUrl == null)

@@ -1,7 +1,5 @@
 package uk.ac.ceda.authentication.cookie;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.regex.Pattern;
@@ -12,6 +10,11 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+/**
+ * Class encapsulating a cookie containing user details.
+ * 
+ * @author William Tucker
+ */
 public class UserDetailsCookie extends SecureCookie
 {
     public static String BODY_SEPARATOR = "!";
@@ -24,6 +27,16 @@ public class UserDetailsCookie extends SecureCookie
 
     private static final Log LOG = LogFactory.getLog(UserDetailsCookie.class);
     
+    /**
+     * Constructor taking a cookie name and user information.
+     * 
+     * @param name      cookie name
+     * @param key       secret key for decryption
+     * @param timestamp cookie creation timestamp
+     * @param userID    cookie user ID
+     * @param tokens    cookie tokens
+     * @param userData  cookie user data
+     */
     public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String[] tokens, String userData)
     {
         super(name, key);
@@ -34,9 +47,21 @@ public class UserDetailsCookie extends SecureCookie
         this.userData = userData;
     }
     
+    /**
+     * Parses an encrypted user details cookie value.
+     * 
+     * @param name          cookie name
+     * @param encodedValue  encoded value
+     * @param key           secret key for decryption
+     * @return  parsed value
+     * @throws DecryptionException 
+     * @throws DecoderException 
+     * @throws NoSuchPaddingException 
+     * @throws NoSuchAlgorithmException 
+     */
     public static UserDetailsCookie parseCookie(String name, String encodedValue, String key)
             throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
-                InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
+                    DecryptionException
     {
         SecureCookie cookie = SecureCookie.parseCookie(name, encodedValue, key);
         String cookieContent = cookie.getValue();
@@ -90,27 +115,50 @@ public class UserDetailsCookie extends SecureCookie
         return details;
     }
     
+    /**
+     * @see SecureCookie#getValue()
+     */
     @Override
     public String getValue()
     {
         return super.getValue();
     }
     
+    /**
+     * Get the timestamp of the cookie.
+     * 
+     * @return  cookie timestamp
+     */
     public Timestamp getTimestamp()
     {
         return timestamp;
     }
     
+    /**
+     * Get the cookie user ID.
+     * 
+     * @return  cookie user ID
+     */
     public String getUserID()
     {
         return userID;
     }
     
+    /**
+     * Get a list of tokens from the cookie.
+     * 
+     * @return  cookie tokens
+     */
     public String[] getTokens()
     {
         return tokens;
     }
     
+    /**
+     * Get the cookie user data.
+     * 
+     * @return  cookie user data
+     */
     public String getUserData()
     {
         return userData;
