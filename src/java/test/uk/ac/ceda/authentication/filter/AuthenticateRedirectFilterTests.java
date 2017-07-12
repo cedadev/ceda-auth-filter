@@ -6,10 +6,17 @@ import static org.mockito.Mockito.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -32,6 +39,10 @@ public class AuthenticateRedirectFilterTests
     
     private static final String REDIRECT_QUERY_PARAM = "redirectQuery";
     private static final String REDIRECT_QUERY = "r";
+    
+    private static final String SECRET_KEY_PARAM = "secretKey";
+    private static final String COOKIE_NAME_PARAM = "sessionCookieName";
+    private static final String COOKIE_NAME = "session-cookie";
     
     @Mock
     private HttpServletRequest mockRequest;
@@ -86,7 +97,79 @@ public class AuthenticateRedirectFilterTests
         String result = stringCaptor.getValue();
         assertEquals(result, expectedPrefix + "http%3A%2F%2Flocalhost%3A8080%2F");
     }
+    
+    @Test
+    public void testDoFilter_authenticated() throws URISyntaxException, IOException, ServletException
+    {
+        ClassLoader loader = Test.class.getClassLoader();
+        Path cookieInfoPath = Paths.get(loader.getResource(
+                "uk/ac/ceda/authentication/cookie/sample_cookies/user-details-cookie-info").toURI());
+        
+        Stream<String> stream = Files.lines(cookieInfoPath);
+        HashMap<String, String> valueMap = new HashMap<String, String>();
+        stream.forEach(line -> {
+            String[] parts = line.split(" ", 2);
+            if (parts.length > 1)
+            {
+                String key = parts[0].replaceAll(":", "");
+                String value = parts[1];
+                
+                valueMap.put(key, value);
+            }
+        });
+        stream.close();
+        
+        String secretKey = valueMap.get("encoded_secret_key");
+        String cookieValue = valueMap.get("cookie_value");
+        
+        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(
+                secretKey);
+        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(
+                COOKIE_NAME);
+        
+        filter = new AuthenticateRedirectFilter();
+        filter.init(mockFilterConfig);
+        
+        Cookie[] cookies = new Cookie[1];
+        cookies[0] = new Cookie(COOKIE_NAME, cookieValue);
+        
+        // insert the cookie into the request
+        when(mockRequest.getCookies()).thenReturn(cookies);
+        
+        // mock the getRequestURI() response
+        StringBuffer requestUrl = new StringBuffer("http://localhost:8080/");
+        when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+        
+        filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+    }
 
+    @Test
+    public void testDoFilter_badCookie() throws URISyntaxException, IOException, ServletException
+    {
+        String secretKey = "";
+        String cookieValue = "";
+        
+        when(mockFilterConfig.getInitParameter(SECRET_KEY_PARAM)).thenReturn(
+                secretKey);
+        when(mockFilterConfig.getInitParameter(COOKIE_NAME_PARAM)).thenReturn(
+                COOKIE_NAME);
+        
+        filter = new AuthenticateRedirectFilter();
+        filter.init(mockFilterConfig);
+        
+        Cookie[] cookies = new Cookie[1];
+        cookies[0] = new Cookie(COOKIE_NAME, cookieValue);
+        
+        // insert the cookie into the request
+        when(mockRequest.getCookies()).thenReturn(cookies);
+        
+        // mock the getRequestURI() response
+        StringBuffer requestUrl = new StringBuffer("http://localhost:8080/");
+        when(mockRequest.getRequestURL()).thenReturn(requestUrl);
+        
+        filter.doFilter(mockRequest, mockResponse, mockFilterChain);
+    }
+    
     @Test
     public void testGetRedirectUrl_simpleAuthUrl() throws ServletException, MalformedURLException,
             UnsupportedEncodingException
