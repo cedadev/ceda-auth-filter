@@ -59,7 +59,11 @@ public class AuthenticateRedirectFilter implements Filter
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
             throws IOException, ServletException
     {
-        if (this.authenticateUrl != null)
+        if (this.authenticateUrl == null)
+        {
+            LOG.warn("Authenticate URL not specified in config; skipping filter.");
+        }
+        else
         {
             HttpServletRequest httpRequest = (HttpServletRequest) request;
             
@@ -73,12 +77,13 @@ public class AuthenticateRedirectFilter implements Filter
                     if (cookie.getName().equals(this.sessionCookieName))
                     {
                         cookieValue = cookie.getValue();
+                        
+                        if (LOG.isDebugEnabled())
+                            LOG.debug(String.format("Found session cookie: %s", cookieValue));
                     }
                 }
             }
             
-            // determine userID from session cookie
-            String userID = null;
             if (cookieValue == null)
             {
                 // session cookie not found
@@ -91,36 +96,56 @@ public class AuthenticateRedirectFilter implements Filter
                     requestUrl.append('?').append(query);
                 }
                 
-                String redirectUrl = getRedirectUrl(requestUrl.toString());
-                if (redirectUrl != null)
+                try
                 {
+                    String redirectUrl = getRedirectUrl(requestUrl.toString());
+                    
+                    // send the redirect
                     HttpServletResponse httpResponse = (HttpServletResponse) response;
                     httpResponse.sendRedirect(redirectUrl);
+                    
+                    if (LOG.isDebugEnabled())
+                        LOG.debug(String.format(
+                                "Session cookie not found; redirecting to: %s", redirectUrl));
+                }
+                catch (MalformedURLException | UnsupportedEncodingException e)
+                {
+                    LOG.error("Failed to construct redirect reponse.", e);
                 }
             }
             else
             {
+                // determine userID from session cookie
+                String userID = null;
                 try
                 {
+                    // parse a user ID from the cookie value
                     UserDetailsCookie sessionCookie = UserDetailsCookie.parseCookie(
                             this.sessionCookieName, 
                             cookieValue,
                             this.secretKey);
                     userID = sessionCookie.getUserID();
+                    
+                    if (LOG.isDebugEnabled())
+                        LOG.debug(String.format("Found user ID: %s", userID));
                 }
-                catch (NoSuchAlgorithmException | NoSuchPaddingException | DecoderException |
-                        DecryptionException e)
+                catch (NoSuchAlgorithmException | NoSuchPaddingException e)
                 {
-                    LOG.error(String.format("Problem parsing cookie value: %s", cookieValue), e);
+                    LOG.error("Failed to load decoding/decryption handlers.", e);
                 }
-            }
-            
-            if (userID == null)
-            {
-                // userID not found in cookie
-                // send 401 response
-                HttpServletResponse httpResponse = (HttpServletResponse) response;
-                httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found.");
+                catch (DecoderException | DecryptionException e)
+                {
+                    if (LOG.isDebugEnabled())
+                        LOG.debug(String.format("Problem parsing cookie value: %s", cookieValue));
+                }
+                
+                if (userID == null)
+                {
+                    // userID not found in cookie
+                    // send 401 response
+                    HttpServletResponse httpResponse = (HttpServletResponse) response;
+                    httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found.");
+                }
             }
         }
         
@@ -160,11 +185,6 @@ public class AuthenticateRedirectFilter implements Filter
      */
     public String getRedirectUrl(String returnUrl) throws MalformedURLException, UnsupportedEncodingException
     {
-        if (this.authenticateUrl == null)
-        {
-            return null;
-        }
-        
         String query = this.authenticateUrl.getQuery();
         
         String queryPrefix = "";
@@ -182,14 +202,14 @@ public class AuthenticateRedirectFilter implements Filter
         
         returnUrl = URLEncoder.encode(returnUrl, "UTF-8");
         
-        String redirectUrl = String.format("%s%s%s=%s",
+        URL redirectUrl = new URL(String.format("%s%s%s=%s",
                 this.authenticateUrl,
                 queryPrefix,
                 this.redirectQuery,
                 returnUrl
-            );
+            ));
         
-        return redirectUrl;
+        return redirectUrl.toString();
     }
 
 }
