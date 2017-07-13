@@ -64,6 +64,9 @@ public class AuthenticateRedirectFilterTests
     @Captor
     private ArgumentCaptor<String> stringCaptor;
     
+    @Captor
+    private ArgumentCaptor<Integer> intCaptor;
+    
     private AuthenticateRedirectFilter filter;
     private String expectedPrefix;
     
@@ -92,8 +95,8 @@ public class AuthenticateRedirectFilterTests
             });
             stream.close();
             
-            AuthenticateRedirectFilterTests.secretKey = valueMap.get("encoded_secret_key");
-            AuthenticateRedirectFilterTests.cookieValue = valueMap.get("cookie_value");
+            secretKey = valueMap.get("encoded_secret_key");
+            cookieValue = valueMap.get("cookie_value");
         }
         catch (URISyntaxException | IOException e)
         {
@@ -189,7 +192,10 @@ public class AuthenticateRedirectFilterTests
         
         filter.doFilter(mockRequest, mockResponse, mockFilterChain);
         
-        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, mockResponse.getStatus());
+        verify(mockResponse).sendError(intCaptor.capture(), anyString());;
+        
+        int result = intCaptor.getValue();
+        assertEquals(HttpServletResponse.SC_UNAUTHORIZED, result);
     }
     
     @Test
@@ -202,14 +208,14 @@ public class AuthenticateRedirectFilterTests
         url = "http://localhost:8080/";
         expectedUrl = expectedPrefix + "http%3A%2F%2Flocalhost%3A8080%2F";
         redirectUrl = filter.getRedirectUrl(url);
-
+        
         assertEquals(redirectUrl, expectedUrl);
-
+        
         // With query string
         url = "http://localhost:8080/?key=value";
         expectedUrl = expectedPrefix + "http%3A%2F%2Flocalhost%3A8080%2F%3Fkey%3Dvalue";
         redirectUrl = filter.getRedirectUrl(url);
-
+        
         assertEquals(redirectUrl, expectedUrl);
     }
 
@@ -232,14 +238,14 @@ public class AuthenticateRedirectFilterTests
         url = "http://localhost:8080/";
         expectedUrl = expectedPrefix + "http%3A%2F%2Flocalhost%3A8080%2F";
         redirectUrl = filter.getRedirectUrl(url);
-
+        
         assertEquals(redirectUrl, expectedUrl);
-
+        
         // With query string
         url = "http://localhost:8080/?key=value";
         expectedUrl = expectedPrefix + "http%3A%2F%2Flocalhost%3A8080%2F%3Fkey%3Dvalue";
         redirectUrl = filter.getRedirectUrl(url);
-
+        
         assertEquals(redirectUrl, expectedUrl);
     }
 
