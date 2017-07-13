@@ -1,0 +1,27 @@
+<ivy-module version="2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="http://ant.apache.org/ivy/schemas/ivy.xsd">
+
+  <info organisation="uk.ac.ceda" module="ceda-auth-filter"/>
+
+  <publications>
+    <artifact name="${module}" type="jar" conf="*"/>
+    <artifact name="${module}-test" type="jar" conf="*"/>
+  </publications>
+
+  <dependencies>
+
+    <!-- https://mvnrepository.com/artifact/junit/junit -->
+    <dependency org="junit" name="junit" rev="4.12"/>
+
+    <!-- https://mvnrepository.com/artifact/org.mockito/mockito-all -->
+    <dependency org="org.mockito" name="mockito-all" rev="1.10.19"/>
+    
+    <!-- https://mvnrepository.com/artifact/commons-logging/commons-logging -->
+    <dependency org="commons-logging" name="commons-logging" rev="1.2"/>
+    
+    <!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+    <dependency org="commons-codec" name="commons-codec" rev="1.10"/>
+
+  </dependencies>
+
+</ivy-module>

@@ -21,7 +21,6 @@ public class FilterCheck extends HttpServlet
     public FilterCheck()
     {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     /**
@@ -30,7 +29,6 @@ public class FilterCheck extends HttpServlet
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
-        // TODO Auto-generated method stub
         response.getWriter().append("Served at: ").append(request.getContextPath());
     }
 
@@ -40,7 +38,6 @@ public class FilterCheck extends HttpServlet
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException
     {
-        // TODO Auto-generated method stub
         doGet(request, response);
     }
 
