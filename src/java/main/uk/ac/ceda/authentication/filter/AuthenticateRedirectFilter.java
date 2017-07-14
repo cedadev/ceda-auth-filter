@@ -37,6 +37,8 @@ import uk.ac.ceda.authentication.filter.AuthenticateRedirectFilter;
 public class AuthenticateRedirectFilter implements Filter
 {
 
+    private String requestAttribute;
+    
     private URL authenticateUrl;
     private String redirectQuery;
     
@@ -146,6 +148,11 @@ public class AuthenticateRedirectFilter implements Filter
                     HttpServletResponse httpResponse = (HttpServletResponse) response;
                     httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED, "User not found.");
                 }
+                else
+                {
+                    // set request attribute indicating authentication success
+                    httpRequest.setAttribute(this.requestAttribute, userID);
+                }
             }
         }
         
@@ -173,6 +180,8 @@ public class AuthenticateRedirectFilter implements Filter
         
         this.sessionCookieName = fConfig.getInitParameter("sessionCookieName");
         this.secretKey = fConfig.getInitParameter("secretKey");
+        
+        this.requestAttribute = fConfig.getInitParameter("requestAttribute");
     }
     
     /**

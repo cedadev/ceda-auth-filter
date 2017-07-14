@@ -41,6 +41,9 @@ public class AuthenticateRedirectFilterTests
     
     private static final String REDIRECT_QUERY_PARAM = "redirectQuery";
     private static final String REDIRECT_QUERY = "r";
+
+    private static final String REQUEST_ATTRIBUTE_PARAM = "requestAttribute";
+    private static final String REQUEST_ATTRIBUTE = "id";
     
     private static final String SECRET_KEY_PARAM = "secretKey";
     private static final String COOKIE_NAME_PARAM = "sessionCookieName";
@@ -48,6 +51,7 @@ public class AuthenticateRedirectFilterTests
     
     private static String secretKey;
     private static String cookieValue;
+    private static String userID;
     
     @Mock
     private HttpServletRequest mockRequest;
@@ -97,6 +101,7 @@ public class AuthenticateRedirectFilterTests
             
             secretKey = valueMap.get("encoded_secret_key");
             cookieValue = valueMap.get("cookie_value");
+            userID = valueMap.get("userid");
         }
         catch (URISyntaxException | IOException e)
         {
@@ -113,6 +118,8 @@ public class AuthenticateRedirectFilterTests
                 AUTHENTICATE_URL);
         when(mockFilterConfig.getInitParameter(REDIRECT_QUERY_PARAM)).thenReturn(
                 REDIRECT_QUERY);
+        when(mockFilterConfig.getInitParameter(REQUEST_ATTRIBUTE_PARAM)).thenReturn(
+                REQUEST_ATTRIBUTE);
         
         filter = new AuthenticateRedirectFilter();
         filter.init(mockFilterConfig);
@@ -166,6 +173,10 @@ public class AuthenticateRedirectFilterTests
         filter.doFilter(mockRequest, mockResponse, mockFilterChain);
         
         verify(mockResponse, never()).sendRedirect(anyString());
+        
+        // capture the request attribute, if assigned
+        verify(mockRequest).setAttribute(eq(REQUEST_ATTRIBUTE), stringCaptor.capture());
+        assertEquals(userID, stringCaptor.getValue());
     }
 
     @Test
