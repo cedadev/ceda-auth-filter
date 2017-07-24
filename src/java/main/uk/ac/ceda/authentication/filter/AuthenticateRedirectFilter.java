@@ -166,14 +166,17 @@ public class AuthenticateRedirectFilter implements Filter
     public void init(FilterConfig fConfig) throws ServletException
     {
         String authenticateUrl = fConfig.getInitParameter("authenticateUrl");
-        try
+        if (authenticateUrl != null)
         {
-            this.authenticateUrl = new URL(authenticateUrl);
-        }
-        catch (MalformedURLException e)
-        {
-            LOG.error(String.format("URL, %s, was not a valid format.", authenticateUrl), e);
-            this.authenticateUrl = null;
+            try
+            {
+                this.authenticateUrl = new URL(authenticateUrl);
+            }
+            catch (MalformedURLException e)
+            {
+                LOG.error(String.format("%s is not a valid URL.", authenticateUrl), e);
+                this.authenticateUrl = null;
+            }
         }
         
         this.redirectQuery = fConfig.getInitParameter("redirectQuery");
