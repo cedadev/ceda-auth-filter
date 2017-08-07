@@ -40,10 +40,12 @@ public class AuthenticateRedirectFilter implements Filter
     private String requestAttribute;
     
     private URL authenticateUrl;
-    private String redirectQuery;
+    private String returnQueryName;
     
     private String sessionCookieName;
     private String secretKey;
+    
+    private static final String RETURN_QUERY_NAME_DEFAULT = "r";
     
     private static final Log LOG = LogFactory.getLog(AuthenticateRedirectFilter.class);
     
@@ -179,7 +181,11 @@ public class AuthenticateRedirectFilter implements Filter
             }
         }
         
-        this.redirectQuery = fConfig.getInitParameter("redirectQuery");
+        this.returnQueryName = fConfig.getInitParameter("returnQueryName");
+        if (this.returnQueryName == null)
+        {
+            this.returnQueryName = RETURN_QUERY_NAME_DEFAULT;
+        }
         
         this.sessionCookieName = fConfig.getInitParameter("sessionCookieName");
         this.secretKey = fConfig.getInitParameter("secretKey");
@@ -217,7 +223,7 @@ public class AuthenticateRedirectFilter implements Filter
         URL redirectUrl = new URL(String.format("%s%s%s=%s",
                 this.authenticateUrl,
                 queryPrefix,
-                this.redirectQuery,
+                this.returnQueryName,
                 returnUrl
             ));
         

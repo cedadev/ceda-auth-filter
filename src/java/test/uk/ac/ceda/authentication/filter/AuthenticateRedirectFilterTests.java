@@ -39,8 +39,8 @@ public class AuthenticateRedirectFilterTests
     private static final String AUTHENTICATE_URL =
             "https://auth-test.ceda.ac.uk/account/signin/";
     
-    private static final String REDIRECT_QUERY_PARAM = "redirectQuery";
-    private static final String REDIRECT_QUERY = "r";
+    private static final String RETURN_QUERY_NAME_PARAM = "returnQueryName";
+    private static final String RETURN_QUERY_NAME = "r";
 
     private static final String REQUEST_ATTRIBUTE_PARAM = "requestAttribute";
     private static final String REQUEST_ATTRIBUTE = "id";
@@ -112,12 +112,12 @@ public class AuthenticateRedirectFilterTests
     @Before
     public void setUp() throws Exception
     {
-        expectedPrefix = String.format("%s?%s=", AUTHENTICATE_URL, REDIRECT_QUERY);
+        expectedPrefix = String.format("%s?%s=", AUTHENTICATE_URL, RETURN_QUERY_NAME);
         
         when(mockFilterConfig.getInitParameter(AUTHENTICATE_URL_PARAM)).thenReturn(
                 AUTHENTICATE_URL);
-        when(mockFilterConfig.getInitParameter(REDIRECT_QUERY_PARAM)).thenReturn(
-                REDIRECT_QUERY);
+        when(mockFilterConfig.getInitParameter(RETURN_QUERY_NAME_PARAM)).thenReturn(
+                RETURN_QUERY_NAME);
         when(mockFilterConfig.getInitParameter(REQUEST_ATTRIBUTE_PARAM)).thenReturn(
                 REQUEST_ATTRIBUTE);
         
@@ -235,7 +235,7 @@ public class AuthenticateRedirectFilterTests
             UnsupportedEncodingException
     {
         String authenticateUrl = AUTHENTICATE_URL + "?key=value";
-        String expectedPrefix = String.format("%s&%s=", authenticateUrl, REDIRECT_QUERY);
+        String expectedPrefix = String.format("%s&%s=", authenticateUrl, RETURN_QUERY_NAME);
         
         when(mockFilterConfig.getInitParameter(AUTHENTICATE_URL_PARAM)).thenReturn(
                 authenticateUrl);

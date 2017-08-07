@@ -17,7 +17,7 @@
   		<param-value>https://auth.ceda.ac.uk/</param-value>
   	</init-param>
   	<init-param>
-  		<param-name>redirectQuery</param-name>
+  		<param-name>returnQueryName</param-name>
   		<param-value>r</param-value>
   	</init-param>
   	<init-param>
