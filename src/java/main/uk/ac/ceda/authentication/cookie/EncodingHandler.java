@@ -66,12 +66,8 @@ public class EncodingHandler
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
-            throw new DecoderException("Invalid cookie format.", e);
+            throw new DecoderException("Invalid cookie format", e);
         }
-        
-        if (LOG.isDebugEnabled())
-            LOG.debug(String.format("Cipher text: %s\nIV: %s\nDigest: %s",
-                    encodedCipherText, encodedIV, encodedDigest));
         
         byte[] cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
         byte[] ivBytes = Hex.decodeHex(encodedIV.toCharArray());
@@ -85,12 +81,9 @@ public class EncodingHandler
             if (VerifySignature(encodedCipherText.getBytes(), digestBytes, this.keyBytes))
             {
                 if (LOG.isDebugEnabled())
-                    LOG.debug("Decrypting");
+                    LOG.debug("Decrypting bytes");
                 
                 cookieContent = this.encryptionHandler.decrypt(cipherTextBytes, ivBytes);
-                
-                if (LOG.isDebugEnabled())
-                    LOG.debug(String.format("Cookie content: %s", cookieContent));
             }
             else
             {
@@ -114,10 +107,6 @@ public class EncodingHandler
     {
         String originalDigest = new String(digest);
         String calculatedDigest = Sign(key, cipherText);
-        
-        if (LOG.isDebugEnabled())
-            LOG.debug(String.format("Comparing original digest: %s\n   with calculated digest: %s",
-                    originalDigest, calculatedDigest));
         
         return calculatedDigest.equals(originalDigest);
     }

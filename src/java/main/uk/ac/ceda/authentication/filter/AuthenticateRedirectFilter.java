@@ -14,7 +14,6 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -32,8 +31,6 @@ import uk.ac.ceda.authentication.filter.AuthenticateRedirectFilter;
  * 
  * @author William Tucker
  */
-@WebFilter(filterName = "AuthRedirectFilter", urlPatterns = { "/*" },
-           description = "Redirects unauthenticated requests to an authentication service.")
 public class AuthenticateRedirectFilter implements Filter
 {
 
@@ -83,7 +80,7 @@ public class AuthenticateRedirectFilter implements Filter
                         cookieValue = cookie.getValue();
                         
                         if (LOG.isDebugEnabled())
-                            LOG.debug(String.format("Found session cookie: %s", cookieValue));
+                            LOG.debug(String.format("Found session cookie: %s", this.sessionCookieName));
                     }
                 }
             }
@@ -131,7 +128,8 @@ public class AuthenticateRedirectFilter implements Filter
                     userID = sessionCookie.getUserID();
                     
                     if (LOG.isDebugEnabled())
-                        LOG.debug(String.format("Found user ID: %s", userID));
+                        LOG.debug(String.format("Found user ID: %s, cookie timestamp: %s",
+                                userID, sessionCookie.getTimestamp()));
                 }
                 catch (NoSuchAlgorithmException | NoSuchPaddingException e)
                 {
@@ -140,7 +138,7 @@ public class AuthenticateRedirectFilter implements Filter
                 catch (DecoderException | DecryptionException e)
                 {
                     if (LOG.isDebugEnabled())
-                        LOG.debug(String.format("Problem parsing cookie value: %s", cookieValue));
+                        LOG.debug(String.format("Problem parsing cookie value: %s", cookieValue), e);
                 }
                 
                 if (userID == null)
@@ -154,6 +152,7 @@ public class AuthenticateRedirectFilter implements Filter
                 {
                     // set request attribute indicating authentication success
                     httpRequest.setAttribute(this.requestAttribute, userID);
+                    LOG.debug(String.format("Setting %s attribute", this.requestAttribute));
                 }
             }
         }
@@ -161,36 +160,33 @@ public class AuthenticateRedirectFilter implements Filter
         // pass the request along the filter chain
         chain.doFilter(request, response);
     }
-
+    
+    /**
+     * Initialisation method
+     */
+    public void init()
+    {
+        if (this.returnQueryName == null)
+        {
+            this.returnQueryName = RETURN_QUERY_NAME_DEFAULT;
+        }
+    }
+    
     /**
      * @see Filter#init(FilterConfig)
      */
     public void init(FilterConfig fConfig) throws ServletException
     {
-        String authenticateUrl = fConfig.getInitParameter("authenticateUrl");
-        if (authenticateUrl != null)
+        this.init();
+        
+        if (fConfig != null)
         {
-            try
-            {
-                this.authenticateUrl = new URL(authenticateUrl);
-            }
-            catch (MalformedURLException e)
-            {
-                LOG.error(String.format("%s is not a valid URL.", authenticateUrl), e);
-                this.authenticateUrl = null;
-            }
+            this.setAuthenticateUrl(fConfig.getInitParameter("authenticateUrl"));
+            this.setReturnQueryName(fConfig.getInitParameter("returnQueryName"));
+            this.setSessionCookieName(fConfig.getInitParameter("sessionCookieName"));
+            this.setSecretKey(fConfig.getInitParameter("secretKey"));
+            this.setRequestAttribute(fConfig.getInitParameter("requestAttribute"));
         }
-        
-        this.returnQueryName = fConfig.getInitParameter("returnQueryName");
-        if (this.returnQueryName == null)
-        {
-            this.returnQueryName = RETURN_QUERY_NAME_DEFAULT;
-        }
-        
-        this.sessionCookieName = fConfig.getInitParameter("sessionCookieName");
-        this.secretKey = fConfig.getInitParameter("secretKey");
-        
-        this.requestAttribute = fConfig.getInitParameter("requestAttribute");
     }
     
     /**
@@ -228,6 +224,68 @@ public class AuthenticateRedirectFilter implements Filter
             ));
         
         return redirectUrl.toString();
+    }
+    
+    /**
+     * Setter for requestAttribute
+     * 
+     * @param requestAttribute  Attribute name indicating authentication success
+     */
+    public void setRequestAttribute(String requestAttribute)
+    {
+        this.requestAttribute = requestAttribute;
+    }
+    
+    /**
+     * Setter for authenticateUrl
+     * 
+     * @param authenticateUrl   URL to redirect requests to for authentication
+     */
+    public void setAuthenticateUrl(String authenticateUrl)
+    {
+        this.authenticateUrl = null;
+        
+        if (authenticateUrl != null)
+        {
+            try
+            {
+                this.authenticateUrl = new URL(authenticateUrl);
+            }
+            catch (MalformedURLException e)
+            {
+                LOG.error(String.format("%s is not a valid URL", authenticateUrl), e);
+            }
+        }
+    }
+    
+    /**
+     * Setter for returnQueryName
+     * 
+     * @param returnQueryName   Redirect URL query parameter name
+     */
+    public void setReturnQueryName(String returnQueryName)
+    {
+        this.returnQueryName = returnQueryName;
+    }
+    
+    /**
+     * Setter for sessionCookieName
+     * 
+     * @param sessionCookieName Name of the authentication service's authentication cookie
+     */
+    public void setSessionCookieName(String sessionCookieName)
+    {
+        this.sessionCookieName = sessionCookieName;
+    }
+    
+    /**
+     * Setter for secretKey
+     * 
+     * @param secretKey The secret key used to encyrpt the user authentication cookie
+     */
+    public void setSecretKey(String secretKey)
+    {
+        this.secretKey = secretKey;
     }
 
 }

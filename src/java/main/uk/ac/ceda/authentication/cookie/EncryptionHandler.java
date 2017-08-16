@@ -4,9 +4,6 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -27,8 +24,6 @@ public class EncryptionHandler
     private SecretKey key;
     private Cipher cipher;
     private char paddingChar;
-    
-    private static final Log LOG = LogFactory.getLog(EncryptionHandler.class);
     
     /**
      * Constructor taking a secret key and an iv.
@@ -68,14 +63,11 @@ public class EncryptionHandler
             
             String regex = String.format("%s+$", Pattern.quote(String.valueOf(this.paddingChar)));
             textValue = textValue.replaceAll(regex, "");
-            
-            if (LOG.isDebugEnabled())
-                LOG.debug(String.format("Decoded text: %s", plainTextBytes));
         }
         catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException |
                 InvalidKeyException | InvalidAlgorithmParameterException e)
         {
-            throw new DecryptionException("Problem decrypting bytes.", e);
+            throw new DecryptionException("Problem decrypting bytes", e);
         }
         
         return textValue;

@@ -75,8 +75,6 @@ public class UserDetailsCookie extends SecureCookie
             try
             {
                 timestamp = new Timestamp(Long.parseLong(cookieContent.substring(0, 8), 16));
-                if (LOG.isDebugEnabled())
-                    LOG.debug(String.format("timestamp: %s", timestamp.toString()));
             }
             catch (NumberFormatException e)
             {
@@ -92,8 +90,6 @@ public class UserDetailsCookie extends SecureCookie
         
             String[] parts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
             userID = parts[0];
-            if (LOG.isDebugEnabled())
-                LOG.debug(String.format("userID: %s", userID));
             if (parts.length > 1)
             {
                 parts = parts[1].split(Pattern.quote(BODY_SEPARATOR));
