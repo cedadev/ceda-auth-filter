@@ -7,7 +7,7 @@ import javax.crypto.NoSuchPaddingException;
 import org.apache.commons.codec.DecoderException;
 
 /**
- * Class encapsulating an encrypted cookie.
+ * Class encapsulating an encrypted cookie
  * 
  * @author William Tucker
  */
@@ -17,7 +17,7 @@ public class SecureCookie
     private String value;
     
     /**
-     * Constructor taking a cookie name and value.
+     * Constructor taking a cookie name and value
      * 
      * @param name  cookie name
      * @param value cookie value
@@ -28,7 +28,7 @@ public class SecureCookie
     }
     
     /**
-     * Parses an encrypted cookie value.
+     * Parses an encrypted cookie value
      * 
      * @param name          cookie name
      * @param encodedValue  encoded value
@@ -51,7 +51,7 @@ public class SecureCookie
     }
     
     /**
-     * Gets the name of the cookie.
+     * Gets the name of the cookie
      * 
      * @return  the cookie name
      */
@@ -71,7 +71,7 @@ public class SecureCookie
     }
     
     /**
-     * Gets the plain text value of the cookie.
+     * Gets the plain text value of the cookie
      * 
      * @return  the cookie value
      */

@@ -11,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 
 /**
- * Class for parsing encrypted text.
+ * Class for parsing encrypted text
  * 
  * @author William Tucker
  */
@@ -26,7 +26,7 @@ public class EncryptionHandler
     private char paddingChar;
     
     /**
-     * Constructor taking a secret key and an iv.
+     * Constructor taking a secret key and an IV
      * 
      * @param   keyBytes    secret key
      * @param   ivBytes     encryption iv
@@ -43,7 +43,7 @@ public class EncryptionHandler
     }
     
     /**
-     * Decrypt some text.
+     * Decrypt some text
      * 
      * @param   cipherTextBytes byte array of the text
      * @return  decrypted text

@@ -29,7 +29,7 @@ public class EncodingHandler
     private static final Log LOG = LogFactory.getLog(EncodingHandler.class);
     
     /**
-     * Constructor specifying the secret key used for encryption.
+     * Constructor specifying the secret key used for encryption
      * 
      * @param   key   secure secret key
      * @throws NoSuchPaddingException 
@@ -44,7 +44,7 @@ public class EncodingHandler
     }
     
     /**
-     * Decodes an encoded cookie value.
+     * Decodes an encoded cookie value
      * 
      * @param   message   the text to decode
      * @return  the decoded message
@@ -96,7 +96,7 @@ public class EncodingHandler
     }
     
     /**
-     * Verifies the signature of encrypted text with a digest.
+     * Verifies the signature of encrypted text with a digest
      * 
      * @param   cipherText  text to verify as a byte array
      * @param   digest      digest to compare as a byte array
@@ -112,7 +112,7 @@ public class EncodingHandler
     }
     
     /**
-     * Calculate a digest for a message from a key.
+     * Calculate a digest for a message from a key
      * 
      * @param   key     the secret key
      * @param   message text to sign

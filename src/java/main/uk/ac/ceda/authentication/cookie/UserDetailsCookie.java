@@ -13,7 +13,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Class encapsulating a cookie containing user details.
+ * Class encapsulating a cookie containing user details
  * 
  * @author William Tucker
  */
@@ -30,7 +30,7 @@ public class UserDetailsCookie extends SecureCookie
     private static final Log LOG = LogFactory.getLog(UserDetailsCookie.class);
     
     /**
-     * Constructor taking a cookie name and user information.
+     * Constructor taking a cookie name and user information
      * 
      * @param name      cookie name
      * @param key       secret key for decryption
@@ -50,7 +50,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Parses an encrypted user details cookie value.
+     * Parses an encrypted user details cookie value
      * 
      * @param name          cookie name
      * @param encodedValue  encoded value
@@ -131,7 +131,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the timestamp of the cookie.
+     * Get the timestamp of the cookie
      * 
      * @return  cookie timestamp
      */
@@ -141,7 +141,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the cookie user ID.
+     * Get the cookie user ID
      * 
      * @return  cookie user ID
      */
@@ -151,7 +151,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get a list of tokens from the cookie.
+     * Get a list of tokens from the cookie
      * 
      * @return  cookie tokens
      */
@@ -161,7 +161,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the cookie user data.
+     * Get the cookie user data
      * 
      * @return  cookie user data
      */

@@ -151,7 +151,8 @@ public class AuthenticateRedirectFilter implements Filter
                 {
                     // set request attribute indicating authentication success
                     httpRequest.setAttribute(this.requestAttribute, userID);
-                    LOG.debug(String.format("Setting %s attribute", this.requestAttribute));
+                    if (LOG.isDebugEnabled())
+                        LOG.debug(String.format("Setting '%s' attribute", this.requestAttribute));
                 }
             }
         }
@@ -181,7 +182,7 @@ public class AuthenticateRedirectFilter implements Filter
     }
     
     /**
-     * Construct a redirection URL based on config settings.
+     * Construct a redirection URL based on config settings
      * 
      * @param returnUrl URL to return to after authentication
      * @return  redirect URL

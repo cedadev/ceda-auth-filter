@@ -1,7 +1,7 @@
 package uk.ac.ceda.authentication.cookie;
 
 /**
- * Exception thrown when a problem occurs during decryption.
+ * Exception thrown when a problem occurs during decryption
  * 
  * @author William Tucker
  */
