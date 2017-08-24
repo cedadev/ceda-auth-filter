@@ -1,5 +1,7 @@
 package uk.ac.ceda.authentication.cookie;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.regex.Pattern;
@@ -11,7 +13,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 /**
- * Class encapsulating a cookie containing user details.
+ * Class encapsulating a cookie containing user details
  * 
  * @author William Tucker
  */
@@ -28,7 +30,7 @@ public class UserDetailsCookie extends SecureCookie
     private static final Log LOG = LogFactory.getLog(UserDetailsCookie.class);
     
     /**
-     * Constructor taking a cookie name and user information.
+     * Constructor taking a cookie name and user information
      * 
      * @param name      cookie name
      * @param key       secret key for decryption
@@ -37,9 +39,9 @@ public class UserDetailsCookie extends SecureCookie
      * @param tokens    cookie tokens
      * @param userData  cookie user data
      */
-    public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String[] tokens, String userData)
+    public UserDetailsCookie(String key, Timestamp timestamp, String userID, String[] tokens, String userData)
     {
-        super(name, key);
+        super(key);
         
         this.timestamp = timestamp;
         this.userID = userID;
@@ -48,7 +50,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Parses an encrypted user details cookie value.
+     * Parses an encrypted user details cookie value
      * 
      * @param name          cookie name
      * @param encodedValue  encoded value
@@ -59,11 +61,11 @@ public class UserDetailsCookie extends SecureCookie
      * @throws NoSuchPaddingException 
      * @throws NoSuchAlgorithmException 
      */
-    public static UserDetailsCookie parseCookie(String name, String encodedValue, String key)
+    public static UserDetailsCookie parseCookie(String encodedValue, String key)
             throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
                     DecryptionException
     {
-        SecureCookie cookie = SecureCookie.parseCookie(name, encodedValue, key);
+        SecureCookie cookie = SecureCookie.parseCookie(encodedValue, key);
         String cookieContent = cookie.getValue();
         
         Timestamp timestamp = null;
@@ -75,25 +77,29 @@ public class UserDetailsCookie extends SecureCookie
             try
             {
                 timestamp = new Timestamp(Long.parseLong(cookieContent.substring(0, 8), 16));
-                if (LOG.isDebugEnabled())
-                    LOG.debug(String.format("timestamp: %s", timestamp.toString()));
             }
             catch (NumberFormatException e)
             {
                 e.printStackTrace();
             }
-        
+            
             String cookieBody = cookieContent.substring(8);
             if (!cookieBody.contains(BODY_SEPARATOR))
             {
                 if (LOG.isDebugEnabled())
                     LOG.debug("Bad cookie format");
             }
-        
+            
             String[] parts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
-            userID = parts[0];
-            if (LOG.isDebugEnabled())
-                LOG.debug(String.format("userID: %s", userID));
+            try
+            {
+                userID = URLDecoder.decode(parts[0], "UTF-8");
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                userID = parts[0];
+            }
+            
             if (parts.length > 1)
             {
                 parts = parts[1].split(Pattern.quote(BODY_SEPARATOR));
@@ -110,7 +116,7 @@ public class UserDetailsCookie extends SecureCookie
             }
         }
         
-        UserDetailsCookie details = new UserDetailsCookie(name, key, timestamp, userID, tokens, userData);
+        UserDetailsCookie details = new UserDetailsCookie(key, timestamp, userID, tokens, userData);
         
         return details;
     }
@@ -125,7 +131,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the timestamp of the cookie.
+     * Get the timestamp of the cookie
      * 
      * @return  cookie timestamp
      */
@@ -135,7 +141,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the cookie user ID.
+     * Get the cookie user ID
      * 
      * @return  cookie user ID
      */
@@ -145,7 +151,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get a list of tokens from the cookie.
+     * Get a list of tokens from the cookie
      * 
      * @return  cookie tokens
      */
@@ -155,7 +161,7 @@ public class UserDetailsCookie extends SecureCookie
     }
     
     /**
-     * Get the cookie user data.
+     * Get the cookie user data
      * 
      * @return  cookie user data
      */

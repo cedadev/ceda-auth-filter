@@ -7,7 +7,7 @@ import javax.crypto.NoSuchPaddingException;
 import org.apache.commons.codec.DecoderException;
 
 /**
- * Class encapsulating an encrypted cookie.
+ * Class encapsulating an encrypted cookie
  * 
  * @author William Tucker
  */
@@ -17,19 +17,18 @@ public class SecureCookie
     private String value;
     
     /**
-     * Constructor taking a cookie name and value.
+     * Constructor taking a cookie name and value
      * 
      * @param name  cookie name
      * @param value cookie value
      */
-    public SecureCookie(String name, String value)
+    public SecureCookie(String value)
     {
-        this.name = name;
         this.value = value;
     }
     
     /**
-     * Parses an encrypted cookie value.
+     * Parses an encrypted cookie value
      * 
      * @param name          cookie name
      * @param encodedValue  encoded value
@@ -40,19 +39,19 @@ public class SecureCookie
      * @throws DecryptionException 
      * @throws DecoderException 
      */
-    public static SecureCookie parseCookie(String name, String encodedValue, String key) throws
+    public static SecureCookie parseCookie(String encodedValue, String key) throws
             NoSuchAlgorithmException, NoSuchPaddingException, DecoderException, DecryptionException
     {
         EncodingHandler encodingHandler = new EncodingHandler(key);
         String decodedValue = encodingHandler.decode(encodedValue);
         
-        SecureCookie secureCookie = new SecureCookie(name, decodedValue);
+        SecureCookie secureCookie = new SecureCookie(decodedValue);
         
         return secureCookie;
     }
     
     /**
-     * Gets the name of the cookie.
+     * Gets the name of the cookie
      * 
      * @return  the cookie name
      */
@@ -62,7 +61,17 @@ public class SecureCookie
     }
     
     /**
-     * Gets the plain text value of the cookie.
+     * Sets the name of the cookie
+     * 
+     * @param name  the cookie name
+     */
+    public void setName(String name)
+    {
+        this.name = name;
+    }
+    
+    /**
+     * Gets the plain text value of the cookie
      * 
      * @return  the cookie value
      */

@@ -53,8 +53,15 @@ public class UserDetailsCookieTests
         cookieValue = valueMap.get("cookie_value");
         
         userID = valueMap.get("userid");
-        tokens = valueMap.get("tokens").split(",");
         userData = valueMap.get("user_data");
+        if (userData == null)
+        {
+            userData = "";
+        }
+        if (valueMap.containsKey("tokens"))
+        {
+            tokens = valueMap.get("tokens").split(",");
+        }
     }
 
     @Test
@@ -62,14 +69,19 @@ public class UserDetailsCookieTests
             throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
                 InvalidKeyException, InvalidAlgorithmParameterException, DecryptionException
     {
-        UserDetailsCookie cookie = UserDetailsCookie.parseCookie("", this.cookieValue, this.secretKey);
+        UserDetailsCookie cookie = UserDetailsCookie.parseCookie(this.cookieValue, this.secretKey);
         
         assertEquals(this.userID, cookie.getUserID());
+        
         String[] tokens = cookie.getTokens();
-        for (int i = 0; i > tokens.length; i++)
+        if (this.tokens != null && this.tokens.length > 0)
         {
-            assertEquals(this.tokens[i], tokens[i]);
+            for (int i = 0; i > tokens.length; i++)
+            {
+                assertEquals(this.tokens[i], tokens[i]);
+            }
         }
+        
         assertEquals(this.userData, cookie.getUserData());
     }
 

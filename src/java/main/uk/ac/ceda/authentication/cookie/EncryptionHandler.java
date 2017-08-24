@@ -4,9 +4,6 @@ import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -14,7 +11,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.regex.Pattern;
 
 /**
- * Class for parsing encrypted text.
+ * Class for parsing encrypted text
  * 
  * @author William Tucker
  */
@@ -28,10 +25,8 @@ public class EncryptionHandler
     private Cipher cipher;
     private char paddingChar;
     
-    private static final Log LOG = LogFactory.getLog(EncryptionHandler.class);
-    
     /**
-     * Constructor taking a secret key and an iv.
+     * Constructor taking a secret key and an IV
      * 
      * @param   keyBytes    secret key
      * @param   ivBytes     encryption iv
@@ -48,7 +43,7 @@ public class EncryptionHandler
     }
     
     /**
-     * Decrypt some text.
+     * Decrypt some text
      * 
      * @param   cipherTextBytes byte array of the text
      * @return  decrypted text
@@ -68,14 +63,11 @@ public class EncryptionHandler
             
             String regex = String.format("%s+$", Pattern.quote(String.valueOf(this.paddingChar)));
             textValue = textValue.replaceAll(regex, "");
-            
-            if (LOG.isDebugEnabled())
-                LOG.debug(String.format("Decoded text: %s", plainTextBytes));
         }
         catch (BadPaddingException | IllegalBlockSizeException | UnsupportedEncodingException |
                 InvalidKeyException | InvalidAlgorithmParameterException e)
         {
-            throw new DecryptionException("Problem decrypting bytes.", e);
+            throw new DecryptionException("Problem decrypting bytes", e);
         }
         
         return textValue;

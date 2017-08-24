@@ -29,7 +29,7 @@ public class EncodingHandler
     private static final Log LOG = LogFactory.getLog(EncodingHandler.class);
     
     /**
-     * Constructor specifying the secret key used for encryption.
+     * Constructor specifying the secret key used for encryption
      * 
      * @param   key   secure secret key
      * @throws NoSuchPaddingException 
@@ -44,7 +44,7 @@ public class EncodingHandler
     }
     
     /**
-     * Decodes an encoded cookie value.
+     * Decodes an encoded cookie value
      * 
      * @param   message   the text to decode
      * @return  the decoded message
@@ -66,12 +66,8 @@ public class EncodingHandler
         }
         catch (ArrayIndexOutOfBoundsException e)
         {
-            throw new DecoderException("Invalid cookie format.", e);
+            throw new DecoderException("Invalid cookie format", e);
         }
-        
-        if (LOG.isDebugEnabled())
-            LOG.debug(String.format("Cipher text: %s\nIV: %s\nDigest: %s",
-                    encodedCipherText, encodedIV, encodedDigest));
         
         byte[] cipherTextBytes = Hex.decodeHex(encodedCipherText.toCharArray());
         byte[] ivBytes = Hex.decodeHex(encodedIV.toCharArray());
@@ -85,12 +81,9 @@ public class EncodingHandler
             if (VerifySignature(encodedCipherText.getBytes(), digestBytes, this.keyBytes))
             {
                 if (LOG.isDebugEnabled())
-                    LOG.debug("Decrypting");
+                    LOG.debug("Decrypting bytes");
                 
                 cookieContent = this.encryptionHandler.decrypt(cipherTextBytes, ivBytes);
-                
-                if (LOG.isDebugEnabled())
-                    LOG.debug(String.format("Cookie content: %s", cookieContent));
             }
             else
             {
@@ -103,7 +96,7 @@ public class EncodingHandler
     }
     
     /**
-     * Verifies the signature of encrypted text with a digest.
+     * Verifies the signature of encrypted text with a digest
      * 
      * @param   cipherText  text to verify as a byte array
      * @param   digest      digest to compare as a byte array
@@ -115,15 +108,11 @@ public class EncodingHandler
         String originalDigest = new String(digest);
         String calculatedDigest = Sign(key, cipherText);
         
-        if (LOG.isDebugEnabled())
-            LOG.debug(String.format("Comparing original digest: %s\n   with calculated digest: %s",
-                    originalDigest, calculatedDigest));
-        
         return calculatedDigest.equals(originalDigest);
     }
     
     /**
-     * Calculate a digest for a message from a key.
+     * Calculate a digest for a message from a key
      * 
      * @param   key     the secret key
      * @param   message text to sign
