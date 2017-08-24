@@ -161,23 +161,10 @@ public class AuthenticateRedirectFilter implements Filter
     }
     
     /**
-     * Initialisation method
-     */
-    public void init()
-    {
-        if (this.returnQueryName == null)
-        {
-            this.returnQueryName = RETURN_QUERY_NAME_DEFAULT;
-        }
-    }
-    
-    /**
      * @see Filter#init(FilterConfig)
      */
     public void init(FilterConfig fConfig) throws ServletException
     {
-        this.init();
-        
         if (fConfig != null)
         {
             this.setAuthenticateUrl(fConfig.getInitParameter("authenticateUrl"));
@@ -185,6 +172,11 @@ public class AuthenticateRedirectFilter implements Filter
             this.setSessionCookieName(fConfig.getInitParameter("sessionCookieName"));
             this.setSecretKey(fConfig.getInitParameter("secretKey"));
             this.setRequestAttribute(fConfig.getInitParameter("requestAttribute"));
+        }
+        
+        if (this.returnQueryName == null)
+        {
+            this.returnQueryName = RETURN_QUERY_NAME_DEFAULT;
         }
     }
     
