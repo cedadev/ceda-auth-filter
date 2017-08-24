@@ -122,7 +122,6 @@ public class AuthenticateRedirectFilter implements Filter
                 {
                     // parse a user ID from the cookie value
                     UserDetailsCookie sessionCookie = UserDetailsCookie.parseCookie(
-                            this.sessionCookieName, 
                             cookieValue,
                             this.secretKey);
                     userID = sessionCookie.getUserID();

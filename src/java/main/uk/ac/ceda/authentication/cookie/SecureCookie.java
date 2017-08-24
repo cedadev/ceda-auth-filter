@@ -22,9 +22,8 @@ public class SecureCookie
      * @param name  cookie name
      * @param value cookie value
      */
-    public SecureCookie(String name, String value)
+    public SecureCookie(String value)
     {
-        this.name = name;
         this.value = value;
     }
     
@@ -40,13 +39,13 @@ public class SecureCookie
      * @throws DecryptionException 
      * @throws DecoderException 
      */
-    public static SecureCookie parseCookie(String name, String encodedValue, String key) throws
+    public static SecureCookie parseCookie(String encodedValue, String key) throws
             NoSuchAlgorithmException, NoSuchPaddingException, DecoderException, DecryptionException
     {
         EncodingHandler encodingHandler = new EncodingHandler(key);
         String decodedValue = encodingHandler.decode(encodedValue);
         
-        SecureCookie secureCookie = new SecureCookie(name, decodedValue);
+        SecureCookie secureCookie = new SecureCookie(decodedValue);
         
         return secureCookie;
     }
@@ -59,6 +58,16 @@ public class SecureCookie
     public String getName()
     {
         return name;
+    }
+    
+    /**
+     * Sets the name of the cookie
+     * 
+     * @param name  the cookie name
+     */
+    public void setName(String name)
+    {
+        this.name = name;
     }
     
     /**

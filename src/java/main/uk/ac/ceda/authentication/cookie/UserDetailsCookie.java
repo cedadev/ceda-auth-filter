@@ -1,5 +1,7 @@
 package uk.ac.ceda.authentication.cookie;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.util.regex.Pattern;
@@ -37,9 +39,9 @@ public class UserDetailsCookie extends SecureCookie
      * @param tokens    cookie tokens
      * @param userData  cookie user data
      */
-    public UserDetailsCookie(String name, String key, Timestamp timestamp, String userID, String[] tokens, String userData)
+    public UserDetailsCookie(String key, Timestamp timestamp, String userID, String[] tokens, String userData)
     {
-        super(name, key);
+        super(key);
         
         this.timestamp = timestamp;
         this.userID = userID;
@@ -59,11 +61,11 @@ public class UserDetailsCookie extends SecureCookie
      * @throws NoSuchPaddingException 
      * @throws NoSuchAlgorithmException 
      */
-    public static UserDetailsCookie parseCookie(String name, String encodedValue, String key)
+    public static UserDetailsCookie parseCookie(String encodedValue, String key)
             throws NoSuchAlgorithmException, NoSuchPaddingException, DecoderException,
                     DecryptionException
     {
-        SecureCookie cookie = SecureCookie.parseCookie(name, encodedValue, key);
+        SecureCookie cookie = SecureCookie.parseCookie(encodedValue, key);
         String cookieContent = cookie.getValue();
         
         Timestamp timestamp = null;
@@ -80,16 +82,24 @@ public class UserDetailsCookie extends SecureCookie
             {
                 e.printStackTrace();
             }
-        
+            
             String cookieBody = cookieContent.substring(8);
             if (!cookieBody.contains(BODY_SEPARATOR))
             {
                 if (LOG.isDebugEnabled())
                     LOG.debug("Bad cookie format");
             }
-        
+            
             String[] parts = cookieBody.split(Pattern.quote(BODY_SEPARATOR), 2);
-            userID = parts[0];
+            try
+            {
+                userID = URLDecoder.decode(parts[0], "UTF-8");
+            }
+            catch (UnsupportedEncodingException e)
+            {
+                userID = parts[0];
+            }
+            
             if (parts.length > 1)
             {
                 parts = parts[1].split(Pattern.quote(BODY_SEPARATOR));
@@ -106,7 +116,7 @@ public class UserDetailsCookie extends SecureCookie
             }
         }
         
-        UserDetailsCookie details = new UserDetailsCookie(name, key, timestamp, userID, tokens, userData);
+        UserDetailsCookie details = new UserDetailsCookie(key, timestamp, userID, tokens, userData);
         
         return details;
     }
